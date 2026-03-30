@@ -120,13 +120,9 @@ Careful selection of preprocessing techniques leads to better model performance.
 
 ## 📊 Visualizations
 
-(Add your plots in `/images` folder and link them here)
 
-
-```markdown
-![Rain Distribution](images/rain_distribution.png)
-![Outlier Comparison](images/boxplot.png)
-```
+![Box-plots of Outlier Treatments](images/Outliers.png)
+![Rainfall Over Time](images/rain_overtime.png)
 
 ---
 
