@@ -140,13 +140,6 @@ Careful selection of preprocessing techniques leads to better model performance.
 
 ---
 
-## 📎 Research Paper
-
-Full paper available in this repository:
-📄 *The Effect of Outlier Treatment on Predictive Modeling Performance*
-
----
-
 ## 🙌 Author
 
 **Aditya Charan Eranki**
