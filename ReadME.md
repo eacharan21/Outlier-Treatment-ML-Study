@@ -125,6 +125,6 @@ The choice depends on:
 ## 🙌 Author
 
 **Aditya Charan Eranki**
-B.Sc/M.Sc Mathematics – VIT
+M.Sc. Data Science – VIT
 
 ---
