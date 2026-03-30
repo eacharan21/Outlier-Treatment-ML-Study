@@ -112,13 +112,6 @@ The choice depends on:
 
 ---
 
-## 📎 Research Paper
-
-You can read the full paper here:
-👉 `The_Effect_of_Outlier_Treatment_on_Predictive_Modeling_Performance.pdf`
-
----
-
 ## 🛠️ Tech Stack
 
 * Python / R
