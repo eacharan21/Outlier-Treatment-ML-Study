@@ -1,0 +1,125 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+\title{Outlier Treatment and Model Performance Analysis}
+\author{Aditya Charan Eranki}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Machine Learning Model Comparison After Outlier Treatment}
+
+<<setup, include=FALSE>>=
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+library(readxl)
+library(tseries)
+library(xgboost)
+library(knitr)
+library(ggplot2)
+@
+
+\subsection*{Model Training and R\textsuperscript{2} Evaluation}
+
+<<models, echo=TRUE, results='markup'>>=
+# --- With Outliers ---
+fl1 <- "C:/Users/HP/Desktop/VIT/ADITYA/Capstone/AdityaCapstone/Weather Data.xlsx"
+df1 <- read_excel(fl1)
+model1 <- lm(Rain ~ Max_temp + Min_temp + Radiation + Humidity + Wind_speed, data=df1)
+X1 <- as.matrix(df1[, c("Max_temp","Min_temp","Radiation","Humidity","Wind_speed")])
+y1 <- df1$Rain
+xgb_model1 <- xgboost(data=X1, label=y1, objective="reg:squarederror", nrounds=200, max_depth=4, verbose=0)
+y_pred1 <- predict(xgb_model1, X1)
+R21 <- 1 - sum((y1 - y_pred1)^2) / sum((y1 - mean(y1))^2)
+
+# --- Trimmed ---
+fl2 <- "C:/Users/HP/Desktop/VIT/ADITYA/Capstone/AdityaCapstone/Weather_Trim.xlsx"
+df2 <- read_excel(fl2)
+model2 <- lm(Rain ~ Max_temp + Min_temp + Radiation + Humidity + Wind_speed, data=df2)
+X2 <- as.matrix(df2[, c("Max_temp","Min_temp","Radiation","Humidity","Wind_speed")])
+y2 <- df2$Rain
+xgb_model2 <- xgboost(data=X2, label=y2, objective="reg:squarederror", nrounds=200, max_depth=4, verbose=0)
+y_pred2 <- predict(xgb_model2, X2)
+R22 <- 1 - sum((y2 - y_pred2)^2) / sum((y2 - mean(y2))^2)
+
+# --- Capped ---
+fl3 <- "C:/Users/HP/Desktop/VIT/ADITYA/Capstone/AdityaCapstone/Weather_Cap.xlsx"
+df3 <- read_excel(fl3)
+model3 <- lm(Rain ~ Max_temp + Min_temp + Radiation + Humidity + Wind_speed, data=df3)
+X3 <- as.matrix(df3[, c("Max_temp","Min_temp","Radiation","Humidity","Wind_speed")])
+y3 <- df3$Rain
+xgb_model3 <- xgboost(data=X3, label=y3, objective="reg:squarederror", nrounds=200, max_depth=4, verbose=0)
+y_pred3 <- predict(xgb_model3, X3)
+R23 <- 1 - sum((y3 - y_pred3)^2) / sum((y3 - mean(y3))^2)
+
+# --- Log Transformation ---
+fl4 <- "C:/Users/HP/Desktop/VIT/ADITYA/Capstone/AdityaCapstone/Weather_Log.xlsx"
+df4 <- read_excel(fl4)
+model4 <- lm(Rain ~ Max_temp + Min_temp + Radiation + Humidity + Wind_speed, data=df4)
+X4 <- as.matrix(df4[, c("Max_temp","Min_temp","Radiation","Humidity","Wind_speed")])
+y4 <- df4$Rain
+xgb_model4 <- xgboost(data=X4, label=y4, objective="reg:squarederror", nrounds=200, max_depth=4, verbose=0)
+y_pred4 <- predict(xgb_model4, X4)
+R24 <- 1 - sum((y4 - y_pred4)^2) / sum((y4 - mean(y4))^2)
+
+# --- Box-Cox Transformation ---
+fl5 <- "C:/Users/HP/Desktop/VIT/ADITYA/Capstone/AdityaCapstone/Weather_Box.xlsx"
+df5 <- read_excel(fl5)
+model5 <- lm(Rain ~ Max_temp + Min_temp + Radiation + Humidity + Wind_speed, data=df5)
+X5 <- as.matrix(df5[, c("Max_temp","Min_temp","Radiation","Humidity","Wind_speed")])
+y5 <- df5$Rain
+xgb_model5 <- xgboost(data=X5, label=y5, objective="reg:squarederror", nrounds=200, max_depth=4, verbose=0)
+y_pred5 <- predict(xgb_model5, X5)
+R25 <- 1 - sum((y5 - y_pred5)^2) / sum((y5 - mean(y5))^2)
+
+# --- Results Table ---
+Results <- data.frame(
+  "Treatment Name" = c("Without Treatment", "Trimmed", "Capped", "Log Transformation", "Box-Cox Transformation"),
+  "R2 (Linear Model)" = c(
+    summary(model1)$r.squared,
+    summary(model2)$r.squared,
+    summary(model3)$r.squared,
+    summary(model4)$r.squared,
+    summary(model5)$r.squared
+  ),
+  "R2 (XGBoost)" = c(R21, R22, R23, R24, R25)
+)
+@
+
+\subsection*{Comparison of R\textsuperscript{2} Values}
+
+<<results_table, echo=FALSE, results='asis'>>=
+knitr::kable(
+  Results,
+  caption = "Comparison of $R^{2}$ Values Between Linear Regression and XGBoost Models Across Outlier Treatments",
+  digits = 3,
+  align = c('l', 'c', 'c'),
+  booktabs = TRUE
+)
+@
+
+\subsection*{Visualization of R\textsuperscript{2} Values}
+
+<<bar_plot, echo=FALSE, fig.height=4.5, fig.width=7, fig.cap="Bar chart comparing R2 values for Linear Regression and XGBoost across different outlier treatments.">>=
+Results_long <- reshape2::melt(Results, id.vars="Treatment.Name",
+                               variable.name="Model", value.name="R2")
+
+ggplot(Results_long, aes(x=Treatment.Name, y=R2, fill=Model)) +
+  geom_bar(stat="identity", position="dodge", width=0.7) +
+  geom_text(aes(label=round(R2, 3)), position=position_dodge(width=0.7), vjust=-0.5, size=3.2) +
+  labs(title="Model Comparison Across Outlier Treatments",
+       x="Outlier Treatment Method",
+       y=expression(R^2)) +
+  scale_fill_manual(values=c("#4B9CD3", "#E15759")) +
+  theme_minimal(base_size=12) +
+  theme(axis.text.x = element_text(angle=20, hjust=1))
+@
+
+\end{document}
+
